@@ -213,23 +213,21 @@ fn read_plain_optional<O: Offset>(
 
 pub(super) fn read_plain_required<O: Offset>(
     buffer: &[u8],
-    additional: usize,
+    _additional: usize,
     offsets: &mut Vec<O>,
     values: &mut Vec<u8>,
 ) {
     let mut last_offset = *offsets.as_mut_slice().last().unwrap();
 
     let values_iterator = utils::BinaryIter::new(buffer);
-
-    // each value occupies 4 bytes + len declared in 4 bytes => reserve accordingly.
-    values.reserve(buffer.len() - 4 * additional);
-    let a = values.capacity();
     for value in values_iterator {
         last_offset += O::from_usize(value.len()).unwrap();
-        values.extend_from_slice(value);
-        offsets.push(last_offset);
+        unsafe {
+            values.extend_from_slice(value);
+            offsets.push(last_offset);
+        }
+
     }
-    debug_assert_eq!(a, values.capacity());
 }
 
 pub(super) fn extend_from_page<O: Offset>(

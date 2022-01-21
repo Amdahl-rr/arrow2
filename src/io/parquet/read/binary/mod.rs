@@ -75,7 +75,7 @@ where
     I: Stream<Item = std::result::Result<DataPage, E>>,
 {
     let capacity = metadata.num_values() as usize;
-    let mut values = Vec::<u8>::with_capacity(0);
+    let mut values = Vec::<u8>::with_capacity(metadata.uncompressed_size() as usize);
     let mut offsets = Vec::<O>::with_capacity(1 + capacity);
     offsets.push(O::default());
     let mut validity = MutableBitmap::with_capacity(capacity);
@@ -91,6 +91,6 @@ where
             &mut validity,
         )?
     }
-
+    values.shrink_to_fit();
     Ok(finish_array(data_type.clone(), offsets, values, validity))
 }
